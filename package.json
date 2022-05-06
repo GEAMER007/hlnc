@@ -1,0 +1,15 @@
+{
+    "name": "node_bytecode",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "build": "pkg index.js -t node14-linux,node14-win --output build/compiler --config package.json"
+    },
+    "pkg": {
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+  }
+  

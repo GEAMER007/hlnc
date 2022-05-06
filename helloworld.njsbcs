@@ -1,0 +1,42 @@
+#strpool
+global
+globals
+console
+log
+
+#code
+//init
+pushb 0
+pushp
+pushgl
+pushb 1
+pushp
+store
+//code
+//variableIndexed
+pushb 1
+pushp
+pushvar
+//.property
+pushb 2
+pushp
+getp
+//.property
+pushb 3
+pushp
+getp
+//(
+//variableIndexed
+pushb 1
+pushp
+pushvar
+//.property
+pushb 4
+pushp
+getp
+calls
+//)
+#metadata
+{
+	"compiler_v":"alpha_0.1"
+}
