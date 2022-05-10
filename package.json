@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-      "build": "pkg index.js -t node14-linux,node14-win --output build/compiler --config package.json"
+      "build": "pkg index.js -t node14-linux,node14-win --output build/hln_compiler --config package.json"
     },
     "pkg": {
     },
