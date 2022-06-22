@@ -1,6 +1,16 @@
 const fs=require("fs");
-const separators=['.','=','(',')','"',"'",'$','@',';']
+const separators=['.','=','(',')','"',"'",'$','@',';','~','|','#',',',' ']
+function fatalError(reason){
+    console.error("FATAL ERROR: " + reason)
+    process.exit(1)
+}
 const tokens={
+    ' ':class spaceToken{
+        constructor (){
+            this.toInstructions=()=>[]
+            this.s=' '
+        }
+    },
     ';':class semicolonToken{
         constructor (){
             this.toInstructions=()=>['//;','pops']
@@ -35,7 +45,6 @@ const tokens={
                 var endfound=!1
                 var ii
                 for(ii=i+1;ii<d.length;ii++){
-                    
                     if(d[ii] instanceof tokens[")"])endtokensneeded--
                     else if(d[ii] instanceof tokens['('])endtokensneeded++
                     if(endtokensneeded==0){endfound=!0;break} else holds.push(d[ii])
@@ -43,7 +52,8 @@ const tokens={
                 holds.pop()
                 ins.push('//(')
                 compileDigested(ins,s,holds)
-                if(d[i]!='')ins.push('calls')
+                if(d[i-2] instanceof tokens['.']||d[i-2] instanceof tokens['@'])ins.push('calls')
+                if(d[i-2] instanceof tokens['#'])ins.push('pcalls')
                 if(!endfound)throw new Error(`[at ${l}]bracket not closed`)
                 return ii
                  
@@ -126,6 +136,24 @@ const tokens={
             this.s='$'
         }
     },
+    '|':class scopeToken{
+        constructor (l){
+            this.toInstructions=(d,s,i)=>{
+                return ['//scope']
+                 
+            }
+            this.s='|'
+        }
+    },
+    ',':class commaToken{
+        constructor (l){
+            this.toInstructions=(d,s,i)=>{
+                return ['//,']
+                 
+            }
+            this.s=','
+        }
+    },
     '@':class variableIndexToken{
         constructor (){
             this.toInstructions=(d,s,i)=>{
@@ -136,15 +164,85 @@ const tokens={
             }
             this.s='@'
         }
+    },
+    '~':class keywordToken{
+        constructor (){
+            this.toInstructions=(d,s,i,ins)=>{
+                var contents=''
+                var ii
+                var endfound=false
+                for(ii=i+1;ii<d.length;ii++){
+                    if(typeof d[ii]=='string')contents+=d[ii]
+                    else{
+                    
+                    if(d[ii] instanceof tokens["|"]){
+                        endfound=true
+                        break
+                    }else contents+=d[ii].s
+                }}
+                var kw=d[i-1]
+                ins.push('//keyword '+kw,...keywords.hasOwnProperty(kw)?keywords[kw](d,s,i+1,contents):fatalError("keyword "+kw+" does not exist"))
+                return ii
+                 
+            }
+            this.s='~'
+        }
+    },
+    '#':class nonStaticPropertyToken{
+        constructor(){
+            this.toInstructions=(d,s,i)=>{
+                let ind=s.indexOf(d[i+1])
+                ind=ind<0?s.push(d[i+1])-1:ind
+                return ['//.nsprop',`push${ind>128?'s':'b'} ${ind}`,'pushp']
+                 
+            }
+            this.s='.'
+        }
     }
 }
-function compileDigested(instructions,stringpool,digested){
+const keywords={
+    'function':(d,s,i)=>{
+        var fname=d[i]
+        return ['$function '+fname]
+        
+    },
+    "debug":(d,s,i)=>{
+        return['printdebug']
+    },
+    "n":(d,s,i)=>{
+        var num=d[i]
+        return['//number '+num,`push${num<255?'b':(num<65535?'s':'i')} ${num}`,]
+    },
+    "end":(d,s,i)=>{
+        var fname=d[i]
+        let ind=s.indexOf(fname)
+        ind=ind<0?s.push(fname)-1:ind
+        return['$ret','//function as variable','$pushfunction '+fname,`push${ind>128?'s':'b'} ${ind}`,'pushp','store']
+    },
+    'exportFunction':(d,s,i)=>{
+        var fname=d[i]
+        return ['$exportFunction '+fname]
+    },
+    'importFunction':(d,s,i,c)=>{
+        return ['$importFunction '+c]
+    },
+    'if':(d,s,i)=>{
+        //console.log(d[i],d[i+2],d[i+4])
+        
+        return ['//if statement',`$if ${d[i]} ${d[i+2]} ${d[i+4]}`]
+    },
+    'op':(d,s,i)=>{
+        var opc=d[i]
+        return [opc]
+    }
+}
+function compileDigested(instructions,s,digested){
     for(var i=-1; i<digested.length-1;){
         
         i++
         
-        if(typeof digested[i] == "string"){ continue;}
-        var outp=digested[i].toInstructions(digested,stringpool,i,instructions)
+        if(typeof digested[i] == "string"){  continue;}
+        var outp=digested[i].toInstructions(digested,s,i,instructions)
         typeof outp == "number"?i=outp-1:instructions.push(...outp)
         
     }

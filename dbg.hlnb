@@ -1,0 +1,8 @@
+globals@.process.stdin=stdin$
+globals@.process.stdout=stdout$
+globals@.eval=eval$
+"line"=line$
+
+globals@.Function("line","line=>console.log(eval(l))") = lst$
+globals@.require('readline').createInterface(stdin@,stdout@)=int$
+int@#on(line@,lst@)

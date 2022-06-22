@@ -3,7 +3,7 @@ global
 globals
 console
 log
-
+hello world
 #code
 //init
 pushb 0
@@ -26,14 +26,9 @@ pushb 3
 pushp
 getp
 //(
-//variableIndexed
-pushb 1
-pushp
-pushvar
-//.property
+//string
 pushb 4
 pushp
-getp
 calls
 //)
 #metadata
