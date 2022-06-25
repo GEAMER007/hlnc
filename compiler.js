@@ -201,14 +201,8 @@ const tokens={
     }
 }
 const keywords={
-    'function':(d,s,i)=>{
-        var fname=d[i]
-        return ['$function '+fname]
-        
-    },
-    "debug":(d,s,i)=>{
-        return['printdebug']
-    },
+    'function':(d,s,i)=>['$function '+d[i]],
+    "debug":(d,s,i)=>['printdebug'],
     "n":(d,s,i)=>{
         var num=d[i]
         return['//number '+num,`push${num<255?'b':(num<65535?'s':'i')} ${num}`,]
@@ -226,15 +220,10 @@ const keywords={
     'importFunction':(d,s,i,c)=>{
         return ['$importFunction '+c]
     },
-    'if':(d,s,i)=>{
-        //console.log(d[i],d[i+2],d[i+4])
-        
-        return ['//if statement',`$if ${d[i]} ${d[i+2]} ${d[i+4]}`]
-    },
-    'op':(d,s,i)=>{
-        var opc=d[i]
-        return [opc]
-    }
+
+    'lcall':(d,s,i)=['$call '+d[i]],
+    'if':(d,s,i)=>['//if statement',`$if ${d[i]} ${d[i+2]} ${d[i+4]}`],
+    'op':(d,s,i)=>d[i]
 }
 function compileDigested(instructions,s,digested){
     for(var i=-1; i<digested.length-1;){
@@ -249,7 +238,10 @@ function compileDigested(instructions,s,digested){
     
 }
 function compile (input, output){
-    const incontent=fs.readFileSync(input, "utf8").split('\r\n').join('\n').split('\n').join('')
+    var incontentNoComments=[]
+    fs.readFileSync(input, "utf8").split('\r\n').join('\n').split('\n').forEach(l=>!l.startsWith('//')?incontentNoComments.push(l):false)
+    
+    const incontent=incontentNoComments.join('')
     var ptptr=0
     const digested=[]
     var linen=1
